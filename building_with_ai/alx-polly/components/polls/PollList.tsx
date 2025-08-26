@@ -1,11 +1,16 @@
-// Placeholder for poll list component
-import { Card } from "@/components/ui/card";
+import { Poll } from "@/types/Poll";
+import { PollCard } from "./PollCard";
 
-export function PollList() {
+interface PollListProps {
+  polls: Poll[];
+}
+
+export function PollList({ polls }: PollListProps) {
   return (
-    <Card>
-      <h2 className="text-xl font-semibold">Available Polls</h2>
-      {/* Poll items here */}
-    </Card>
+    <div className="space-y-4">
+      {polls.map((poll) => (
+        <PollCard poll={poll} key={poll.id} />
+      ))}
+    </div>
   );
 }

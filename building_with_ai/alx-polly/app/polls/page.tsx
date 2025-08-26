@@ -1,7 +1,21 @@
-// Polls listing page
-import { Card } from "@/components/ui/card";
+import { PollList } from "@/components/polls/PollList";
+import { supabase } from "@/lib/supabase";
+import { Poll } from "@/types/Poll";
 
-export default function PollsPage() {
+async function getPolls(): Promise<Poll[]> {
+  const { data, error } = await supabase.from("polls").select("*");
+
+  if (error) {
+    console.error("Error fetching polls:", error);
+    return [];
+  }
+
+  return data as Poll[];
+}
+
+export default async function PollsPage() {
+  const polls = await getPolls();
+
   return (
     <div className="container mx-auto py-8">
       <div className="space-y-6">
@@ -14,10 +28,11 @@ export default function PollsPage() {
             Create New Poll
           </a>
         </div>
-        <Card>
+        {polls.length > 0 ? (
+          <PollList polls={polls} />
+        ) : (
           <p className="text-gray-600">No polls created yet. Create your first poll!</p>
-          {/* Poll list will go here */}
-        </Card>
+        )}
       </div>
     </div>
   );
