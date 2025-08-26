@@ -1,10 +1,12 @@
-"use client";
+'use client'
 
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/context/AuthContext";
 
 interface PollOption {
   id: string;
@@ -12,8 +14,9 @@ interface PollOption {
 }
 
 export function NewPollForm() {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const { user } = useAuth();
+  const router = useRouter();
+  const [question, setQuestion] = useState("");
   const [options, setOptions] = useState<PollOption[]>([
     { id: "1", text: "" },
     { id: "2", text: "" }
@@ -31,7 +34,7 @@ export function NewPollForm() {
     }
   };
 
-  const updateOption = (id: string, text: string) => {
+  const updateOptionText = (id: string, text: string) => {
     setOptions(options.map(option => 
       option.id === id ? { ...option, text } : option
     ));
@@ -39,88 +42,67 @@ export function NewPollForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      alert("You must be logged in to create a poll.");
+      return;
+    }
+
     setIsSubmitting(true);
 
-    // Validate form
-    if (!title.trim()) {
-      alert("Please enter a poll title");
-      setIsSubmitting(false);
-      return;
+    const validOptions = options
+      .map(opt => ({ text: opt.text.trim(), votes: 0 }))
+      .filter(opt => opt.text);
+
+    if (question.trim() && validOptions.length >= 2) {
+      const { data, error } = await supabase
+        .from('polls')
+        .insert({
+          question: question.trim(),
+          options: validOptions,
+          user_id: user.id,
+        })
+        .select('id')
+        .single();
+
+      if (error) {
+        console.error('Error creating poll:', error);
+        alert("Error creating poll. Please try again.");
+      } else if (data) {
+        router.push(`/polls/${data.id}`);
+      }
+    } else {
+      alert("Please fill out the question and at least two options.");
     }
 
-    const validOptions = options.filter(option => option.text.trim());
-    if (validOptions.length < 2) {
-      alert("Please provide at least 2 options");
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Simulate API call
-    try {
-      console.log("Creating poll:", {
-        title: title.trim(),
-        description: description.trim(),
-        options: validOptions.map(opt => opt.text.trim())
-      });
-      
-      // Simulate delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      alert("Poll created successfully!");
-      
-      // Reset form
-      setTitle("");
-      setDescription("");
-      setOptions([{ id: "1", text: "" }, { id: "2", text: "" }]);
-      
-    } catch (error) {
-      alert("Error creating poll. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    setIsSubmitting(false);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Poll Title */}
+    <form onSubmit={handleSubmit} className="p-6 space-y-6 bg-white rounded-lg shadow-md">
       <div className="space-y-2">
-        <Label htmlFor="title">Poll Title *</Label>
+        <Label htmlFor="question" className="text-lg font-semibold">Your Question</Label>
         <Input
-          id="title"
-          placeholder="What's your question?"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          id="question"
+          placeholder="e.g., What is your favorite programming language?"
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
           required
+          className="text-base"
         />
       </div>
 
-      {/* Poll Description */}
-      <div className="space-y-2">
-        <Label htmlFor="description">Description (Optional)</Label>
-        <textarea
-          id="description"
-          placeholder="Add more details about your poll..."
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="flex min-h-[80px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          rows={3}
-        />
-      </div>
-
-      {/* Poll Options */}
       <div className="space-y-4">
-        <Label>Poll Options *</Label>
+        <Label className="text-lg font-semibold">Options</Label>
         <div className="space-y-3">
           {options.map((option, index) => (
-            <div key={option.id} className="flex gap-2 items-center">
-              <div className="flex-1">
-                <Input
-                  placeholder={`Option ${index + 1}`}
-                  value={option.text}
-                  onChange={(e) => updateOption(option.id, e.target.value)}
-                  required={index < 2}
-                />
-              </div>
+            <div key={option.id} className="flex gap-3 items-center">
+              <Input
+                placeholder={`Option ${index + 1}`}
+                value={option.text}
+                onChange={(e) => updateOptionText(option.id, e.target.value)}
+                required={index < 2}
+                className="flex-1"
+              />
               {options.length > 2 && (
                 <Button
                   type="button"
@@ -128,38 +110,35 @@ export function NewPollForm() {
                   size="sm"
                   onClick={() => removeOption(option.id)}
                 >
-                  ✕
+                  Remove
                 </Button>
               )}
             </div>
           ))}
         </div>
-        
         <Button
           type="button"
           variant="secondary"
           onClick={addOption}
-          className="w-full"
+          className="w-full mt-2"
         >
-          + Add Another Option
+          + Add Option
         </Button>
       </div>
 
-      {/* Submit Button */}
-      <div className="flex gap-4">
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="flex-1"
-        >
-          {isSubmitting ? "Creating Poll..." : "Create Poll"}
-        </Button>
+      <div className="flex justify-end gap-4 pt-4 border-t">
         <Button
           type="button"
           variant="secondary"
-          onClick={() => window.history.back()}
+          onClick={() => router.back()}
         >
           Cancel
+        </Button>
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Creating..." : "Create Poll"}
         </Button>
       </div>
     </form>
