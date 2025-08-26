@@ -1,6 +1,0 @@
-In learning to build with AI, one should start off by manually developing a project structure or base files for which the AI assistant can then upscale.
-Steps:
-1. Initialize a base project (manual)
-2. AI-assisted structural scaffolding - use AI to structure the project for future expansion. A prompt to use can be the following:
-	"I've created a new [project tech e.g. Next.js] polling app project. I want to prepare it for upcoming features like user 	authentication, viewing polls, and creating a new poll. Help me scaffold an initial folder structure and placeholder files for those 	areas. Use Shadcn components"
-3. Oftentimes you may need to assist the AI in running terminal commands, review these commands carefully before running them
