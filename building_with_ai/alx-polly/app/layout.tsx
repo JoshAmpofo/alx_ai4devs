@@ -3,6 +3,7 @@ import type { PropsWithChildren } from "react";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { siteBaseUrl } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,8 +17,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const siteBaseUrl = "https://alx-polly.example.com";
-
 export const metadata: Metadata = {
   metadataBase: new URL(siteBaseUrl),
   title: {
@@ -25,9 +24,6 @@ export const metadata: Metadata = {
     template: "%s | ALX Polly",
   },
   description: "Create and share polls with QR codes",
-  alternates: {
-    canonical: siteBaseUrl,
-  },
   openGraph: {
     title: "ALX Polly",
     description: "Create and share polls with QR codes",

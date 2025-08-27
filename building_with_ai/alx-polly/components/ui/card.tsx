@@ -13,8 +13,8 @@ export const Card = React.forwardRef<HTMLDivElement, React.ComponentPropsWithout
   }
 );
 
-export function CardHeader(props: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className="flex flex-col space-y-1.5 p-6" {...props} />;
+export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("flex flex-col space-y-1.5 p-6", className)} {...props} />;
 }
 
 type AsProp<E extends React.ElementType> = { as?: E };
@@ -53,10 +53,10 @@ export function CardDescription(props: React.HTMLAttributes<HTMLParagraphElement
   return <p className="text-sm text-muted-foreground" {...props} />;
 }
 
-export function CardContent(props: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className="p-6 pt-0" {...props} />;
+export function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("p-6 pt-0", className)} {...props} />;
 }
 
-export function CardFooter(props: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className="flex items-center p-6 pt-0" {...props} />;
+export function CardFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("flex items-center p-6 pt-0", className)} {...props} />;
 }

@@ -1,4 +1,14 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+import { siteBaseUrl } from "@/lib/site";
+
+export function generateMetadata(): Metadata {
+  return {
+    alternates: {
+      canonical: new URL("/polls", siteBaseUrl).toString(),
+    },
+  };
+}
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -32,7 +42,6 @@ export default function PollsListPage() {
                 <Link
                   key={i}
                   href={`/polls/${i}`}
-                  aria-label={`Open poll #${i}`}
                   className="block rounded-lg border p-4 h-full hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
                   <div className="space-y-1">
