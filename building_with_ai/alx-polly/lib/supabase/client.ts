@@ -1,4 +1,6 @@
-export function getSupabaseClient() {
-  // Placeholder: initialize browser supabase client here
-  return {} as unknown as { placeholder: true };
-}
+import { createBrowserClient } from '@supabase/ssr';
+
+export const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);

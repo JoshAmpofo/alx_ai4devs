@@ -1,92 +1,95 @@
-import type { Metadata } from "next";
+'use client';
+
 import type { PropsWithChildren } from "react";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { siteBaseUrl } from "@/lib/site";
+import AuthProvider, { useAuth } from "@/lib/AuthContext";
+import { Button } from "@/components/ui/button";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-export const revalidate = 86400;
-
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteBaseUrl),
-  title: {
-    default: "ALX Polly",
-    template: "%s | ALX Polly",
-  },
-  description: "Create and share polls with QR codes",
-  openGraph: {
-    title: "ALX Polly",
-    description: "Create and share polls with QR codes",
-    url: siteBaseUrl,
-    siteName: "ALX Polly",
-    images: [
-      {
-        url: `${siteBaseUrl}/og.png`,
-        width: 1200,
-        height: 630,
-        alt: "ALX Polly – Create and share polls with QR codes",
-      },
-    ],
-    locale: "en_US",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "ALX Polly",
-    description: "Create and share polls with QR codes",
-    images: [`${siteBaseUrl}/og.png`],
-    creator: "@alx_polly",
-  },
-  icons: {
-    icon: [
-      { url: `${siteBaseUrl}/favicon-16x16.png`, sizes: "16x16", type: "image/png" },
-      { url: `${siteBaseUrl}/favicon-32x32.png`, sizes: "32x32", type: "image/png" },
-    ],
-    shortcut: [
-      `${siteBaseUrl}/favicon.ico`,
-    ],
-    apple: [
-      { url: `${siteBaseUrl}/apple-touch-icon.png`, sizes: "180x180", type: "image/png" },
-    ],
-    other: [
-      { rel: "mask-icon", url: `${siteBaseUrl}/safari-pinned-tab.svg` },
-    ],
-  },
-  manifest: `${siteBaseUrl}/site.webmanifest`,
-};
+function AppLayout({ children }: PropsWithChildren<{}>) {
+  const { user, supabase } = useAuth();
 
-export default function RootLayout({
-  children,
-}: PropsWithChildren<{}>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.className} ${geistMono.variable} antialiased h-screen flex flex-col`}>
+      <body
+        className={`${geistSans.className} ${geistMono.variable} antialiased h-screen flex flex-col`}
+      >
         <header className="border-b bg-background">
           <div className="container flex items-center justify-between h-14 px-4">
-            <Link href="/polls" className="font-semibold">ALX Polly</Link>
+            <Link href="/" className="font-semibold">
+              ALX Polly
+            </Link>
             <nav className="flex items-center gap-6 text-sm">
-              <Link href="/polls" className="text-foreground/80 hover:text-foreground">My Polls</Link>
-              <Link href="/polls/new" className="text-foreground/80 hover:text-foreground">Create Poll</Link>
+              {user ? (
+                <>
+                  <Link
+                    href="/polls"
+                    className="text-foreground/80 hover:text-foreground"
+                  >
+                    My Polls
+                  </Link>
+                  <Link
+                    href="/polls/new"
+                    className="text-foreground/80 hover:text-foreground"
+                  >
+                    Create Poll
+                  </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                    }}
+                  >
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="text-foreground/80 hover:text-foreground"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="text-foreground/80 hover:text-foreground"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </nav>
           </div>
         </header>
-        <main className="flex-1">
-          {children}
-        </main>
+        <main className="flex-1">{children}</main>
         <footer className="border-t text-xs text-muted-foreground">
-          <div className="container px-4 py-6">© {new Date().getFullYear()} ALX Polly. All rights reserved.</div>
+          <div className="container px-4 py-6">
+            © {new Date().getFullYear()} ALX Polly. All rights reserved.
+          </div>
         </footer>
       </body>
     </html>
+  );
+}
+
+export default function RootLayout({ children }: PropsWithChildren<{}>) {
+  return (
+    <AuthProvider>
+      <AppLayout>{children}</AppLayout>
+    </AuthProvider>
   );
 }

@@ -1,6 +1,24 @@
 # alx-polly
 
 Create, share, and run live polls with QR codes. alx-polly is a Next.js + Supabase app for instructors, event hosts, and teams to collect votes from any device and view real‑time results with simple, secure management.
+
+## Recent Updates & Improvements
+
+### UI Component Enhancements
+- **Card Components**: Updated `CardHeader`, `CardContent`, and `CardFooter` to properly handle className merging using the `cn` utility
+- **Improved Styling**: Enhanced component props handling for better customization and consistent styling patterns
+- **Better Accessibility**: Improved component structure for better screen reader support
+
+### Authentication & Routing Fixes
+- **Next.js 15 Compatibility**: Fixed page components to work with the new App Router params as Promise pattern
+- **Route Protection**: Enhanced authentication flow with proper async/await handling for dynamic routes
+- **Link Component Fixes**: Resolved invalid `<Link>` usage by removing nested `<a>` tags and applying className directly
+
+### Code Quality Improvements
+- **TypeScript Enhancements**: Better type definitions and improved type safety across components
+- **Linting Compliance**: All components now pass linting checks with no errors
+- **Component Architecture**: Improved component structure and prop handling patterns
+
 ## Getting Started
 
 ### Prerequisites
@@ -56,7 +74,52 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
     - `NEXT_PUBLIC_SUPABASE_URL="..."`
     - `NEXT_PUBLIC_SUPABASE_ANON_KEY="..."`
   - Supabase clients live in `lib/supabase/client.ts` and `lib/supabase/server.ts`.
-- **Contribution guide**: Use conventional commits, open a draft PR early, and add context/screenshots. Lint and type-check before pushing. A full `CONTRIBUTING.md` will be added later.
+
+### Key Components
+
+#### UI Components (`components/ui/`)
+- **Card System**: Flexible card components with proper className merging
+- **Form Elements**: Consistent form styling and validation patterns
+- **Layout Components**: Responsive layout utilities and containers
+
+#### Authentication System (`app/(auth)/`)
+- **Login/Register**: User authentication flows with Supabase integration
+- **Route Protection**: Secure routing with proper authentication checks
+- **Context Management**: Global auth state management with React Context
+
+#### Poll Management (`app/polls/`)
+- **Poll Creation**: Dynamic poll creation with multiple choice options
+- **Real-time Results**: Live voting and result updates
+- **QR Code Sharing**: Easy poll sharing via QR codes
+
+## Development Status
+
+### Completed Features ✅
+- Basic authentication system with Supabase
+- Poll creation and management interface
+- Real-time voting system
+- QR code generation for polls
+- Responsive UI components
+- Next.js 15 compatibility fixes
+- Component architecture improvements
+
+### Planned Improvements 🚧
+- Enhanced UI/UX design and animations
+- Advanced authentication features (OAuth, 2FA)
+- Poll analytics and reporting
+- User profile management
+- Advanced poll types and customization
+- Mobile app development
+- API rate limiting and security enhancements
+
+## Contribution Guide
+
+- Use conventional commits for all changes
+- Open draft PRs early for feedback
+- Add context and screenshots for UI changes
+- Ensure all code passes linting and type-checking
+- Test changes across different devices and browsers
+- Follow the established component patterns
 
 ## Learn More
 
