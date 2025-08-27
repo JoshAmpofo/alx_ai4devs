@@ -7,42 +7,59 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
 
-type PollOptionDraft = { id: string; label: string };
+function genId(): string {
+  try {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+  } catch (_) {}
+  const randomPart = Math.random().toString(36).slice(2);
+  const timePart = Date.now().toString(36);
+  return `id_${timePart}_${randomPart}`;
+}
+
+type PollOptionDraft = { readonly id: string; label: string };
 
 export default function NewPollPage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [options, setOptions] = useState<PollOptionDraft[]>([
-    { id: crypto.randomUUID(), label: "" },
-    { id: crypto.randomUUID(), label: "" },
+    { id: genId(), label: "" },
+    { id: genId(), label: "" },
   ]);
   const [submitting, setSubmitting] = useState(false);
 
   function addOption() {
-    setOptions((prev) => [...prev, { id: crypto.randomUUID(), label: "" }]);
+    if (submitting) return;
+    setOptions((prev) => [...prev, { id: genId(), label: "" }]);
   }
 
   function updateOption(id: string, label: string) {
+    if (submitting) return;
     setOptions((prev) => prev.map((o) => (o.id === id ? { ...o, label } : o)));
   }
 
   function removeOption(id: string) {
+    if (submitting) return;
     setOptions((prev) => (prev.length <= 2 ? prev : prev.filter((o) => o.id !== id)));
   }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (submitting) return;
     setSubmitting(true);
 
-    // Placeholder: later this will call an API to create a poll in Supabase
-    await new Promise((r) => setTimeout(r, 800));
-
-    setSubmitting(false);
-    router.push("/polls");
+    try {
+      // Placeholder: later this will call an API to create a poll in Supabase
+      await new Promise((r) => setTimeout(r, 800));
+      router.push("/polls");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  const canSubmit = title.trim().length > 0 && options.filter((o) => o.label.trim()).length >= 2;
+  const canSubmit = title.trim().length > 0 && options.filter((o) => o.label.trim().length > 0).length >= 2;
 
   return (
     <main className="container mx-auto p-6 max-w-3xl">
@@ -60,7 +77,7 @@ export default function NewPollPage() {
           <form className="grid gap-6" onSubmit={onSubmit}>
             <div className="grid gap-2">
               <label className="text-sm font-medium" htmlFor="title">Poll Title</label>
-              <Input id="title" placeholder="Enter a question or title" value={title} onChange={(e) => setTitle(e.target.value)} />
+              <Input id="title" placeholder="Enter a question or title" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus maxLength={120} />
             </div>
             <div className="grid gap-2">
               <label className="text-sm font-medium" htmlFor="desc">Description (optional)</label>
@@ -69,13 +86,30 @@ export default function NewPollPage() {
             <div className="grid gap-3">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">Poll Options</label>
-                <Button type="button" size="sm" onClick={addOption}>Add Option</Button>
+                <Button type="button" size="sm" onClick={addOption} disabled={submitting} aria-disabled={submitting}>Add Option</Button>
               </div>
               <div className="grid gap-2">
                 {options.map((opt, idx) => (
                   <div key={opt.id} className="flex items-center gap-2">
-                    <Input placeholder={`Option ${idx + 1}`} value={opt.label} onChange={(e) => updateOption(opt.id, e.target.value)} />
-                    <Button type="button" variant="ghost" onClick={() => removeOption(opt.id)} disabled={options.length <= 2}>Remove</Button>
+                    <Input
+                      id={`option-${opt.id}`}
+                      name={`option-${opt.id}`}
+                      aria-label={`Option ${idx + 1}`}
+                      placeholder={`Option ${idx + 1}`}
+                      value={opt.label}
+                      onChange={(e) => updateOption(opt.id, e.target.value)}
+                      disabled={submitting}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => removeOption(opt.id)}
+                      disabled={submitting || options.length <= 2}
+                      aria-disabled={submitting || options.length <= 2}
+                      aria-label={`Remove Option ${idx + 1}`}
+                    >
+                      Remove
+                    </Button>
                   </div>
                 ))}
               </div>

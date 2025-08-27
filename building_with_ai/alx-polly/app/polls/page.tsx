@@ -29,14 +29,17 @@ export default function PollsListPage() {
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {[1, 2, 3].map((i) => (
-                <Link key={i} href={`/polls/${i}`} className="block">
-                  <div className="rounded-lg border p-4 h-full hover:bg-accent transition-colors">
-                    <div className="space-y-1">
-                      <p className="font-medium">Sample poll #{i}</p>
-                      <p className="text-sm text-muted-foreground">What do you prefer the most?</p>
-                    </div>
-                    <div className="mt-3 text-xs text-muted-foreground">4 options • 0 votes</div>
+                <Link
+                  key={i}
+                  href={`/polls/${i}`}
+                  aria-label={`Open poll #${i}`}
+                  className="block rounded-lg border p-4 h-full hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <div className="space-y-1">
+                    <h3 className="font-medium">Sample poll #{i}</h3>
+                    <p className="text-sm text-muted-foreground">What do you prefer the most?</p>
                   </div>
+                  <div className="mt-3 text-xs text-muted-foreground">4 options • 0 votes</div>
                 </Link>
               ))}
             </div>
