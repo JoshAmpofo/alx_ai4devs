@@ -7,6 +7,7 @@ import "./globals.css";
 import { siteBaseUrl } from "@/lib/site";
 import AuthProvider, { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
+import { usePathname } from "next/navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,67 +21,73 @@ const geistMono = Geist_Mono({
 
 function AppLayout({ children }: PropsWithChildren<{}>) {
   const { user, supabase } = useAuth();
+  const pathname = usePathname();
+  const isLandingPage = pathname === '/';
 
   return (
     <html lang="en">
       <body
         className={`${geistSans.className} ${geistMono.variable} antialiased h-screen flex flex-col`}
       >
-        <header className="border-b bg-background">
-          <div className="container flex items-center justify-between h-14 px-4">
-            <Link href="/" className="font-semibold">
-              ALX Polly
-            </Link>
-            <nav className="flex items-center gap-6 text-sm">
-              {user ? (
-                <>
-                  <Link
-                    href="/polls"
-                    className="text-foreground/80 hover:text-foreground"
-                  >
-                    My Polls
-                  </Link>
-                  <Link
-                    href="/polls/new"
-                    className="text-foreground/80 hover:text-foreground"
-                  >
-                    Create Poll
-                  </Link>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={async () => {
-                      await supabase.auth.signOut();
-                    }}
-                  >
-                    Logout
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    href="/login"
-                    className="text-foreground/80 hover:text-foreground"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="text-foreground/80 hover:text-foreground"
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              )}
-            </nav>
-          </div>
-        </header>
-        <main className="flex-1">{children}</main>
-        <footer className="border-t text-xs text-muted-foreground">
-          <div className="container px-4 py-6">
-            © {new Date().getFullYear()} ALX Polly. All rights reserved.
-          </div>
-        </footer>
+        {!isLandingPage && (
+          <header className="border-b bg-background">
+            <div className="container flex items-center justify-between h-14 px-4">
+              <Link href="/" className="font-semibold">
+                ALX Polly
+              </Link>
+              <nav className="flex items-center gap-6 text-sm">
+                {user ? (
+                  <>
+                    <Link
+                      href="/polls"
+                      className="text-foreground/80 hover:text-foreground"
+                    >
+                      My Polls
+                    </Link>
+                    <Link
+                      href="/polls/new"
+                      className="text-foreground/80 hover:text-foreground"
+                    >
+                      Create Poll
+                    </Link>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        await supabase.auth.signOut();
+                      }}
+                    >
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      className="text-foreground/80 hover:text-foreground"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      href="/register"
+                      className="text-foreground/80 hover:text-foreground"
+                    >
+                      Sign Up
+                    </Link>
+                  </>
+                )}
+              </nav>
+            </div>
+          </header>
+        )}
+        <main className={isLandingPage ? "flex-1" : "flex-1"}>{children}</main>
+        {!isLandingPage && (
+          <footer className="border-t text-xs text-muted-foreground">
+            <div className="container px-4 py-6">
+              © {new Date().getFullYear()} ALX Polly. All rights reserved.
+            </div>
+          </footer>
+        )}
       </body>
     </html>
   );
