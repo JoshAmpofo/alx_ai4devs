@@ -23,17 +23,14 @@ export async function middleware(req: NextRequest) {
   );
 
   const { data: { session } } = await supabase.auth.getSession();
-
-  const protectedRoutes = ['/polls', '/polls/new'];
   const authRoutes = ['/login', '/register'];
 
+  // Only redirect authenticated users away from auth pages
   if (session && authRoutes.includes(req.nextUrl.pathname)) {
     return NextResponse.redirect(new URL('/polls', req.url));
   }
 
-  if (!session && protectedRoutes.includes(req.nextUrl.pathname)) {
-    return NextResponse.redirect(new URL('/login', req.url));
-  }
-
+  // Let components handle their own auth checks instead of middleware
+  // This prevents race conditions between middleware and client-side auth state
   return res;
 }

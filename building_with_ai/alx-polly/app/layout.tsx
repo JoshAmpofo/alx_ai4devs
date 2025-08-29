@@ -20,9 +20,24 @@ const geistMono = Geist_Mono({
 });
 
 function AppLayout({ children }: PropsWithChildren<{}>) {
-  const { user, supabase } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const pathname = usePathname();
   const isLandingPage = pathname === '/';
+
+  if (loading) {
+    return (
+      <html lang="en">
+        <body className={`${geistSans.className} ${geistMono.variable} antialiased h-screen flex flex-col`}>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading...</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    );
+  }
 
   return (
     <html lang="en">
@@ -53,9 +68,7 @@ function AppLayout({ children }: PropsWithChildren<{}>) {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={async () => {
-                        await supabase.auth.signOut();
-                      }}
+                      onClick={signOut}
                     >
                       Logout
                     </Button>

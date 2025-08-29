@@ -9,6 +9,8 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
 type SupabaseContext = {
   supabase: SupabaseClient;
   user: User | null;
+  loading: boolean;
+  signOut: () => Promise<void>;
 };
 
 const Context = createContext<SupabaseContext | undefined>(undefined);
@@ -25,18 +27,31 @@ export default function AuthProvider({
     )
   );
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    router.push('/');
+  };
+
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
-      router.refresh();
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
     });
 
-    supabase.auth.getUser().then((res) => {
-      if (res.data.user) {
-        setUser(res.data.user);
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+      
+      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+        router.refresh();
       }
     });
 
@@ -46,7 +61,7 @@ export default function AuthProvider({
   }, [router, supabase]);
 
   return (
-    <Context.Provider value={{ supabase, user }}>
+    <Context.Provider value={{ supabase, user, loading, signOut }}>
       <>{children}</>
     </Context.Provider>
   );

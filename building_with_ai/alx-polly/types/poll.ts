@@ -9,9 +9,11 @@ export type IsoDateString = string;
 export type Poll = {
   id: string;
   question: string;
+  description: string | null;
   options: ReadonlyArray<PollOption>;
   createdBy: string;
   createdAt: IsoDateString;
+  expiresAt: IsoDateString | null;
 };
 
 export type Vote = {
