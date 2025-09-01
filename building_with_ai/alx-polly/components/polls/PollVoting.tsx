@@ -5,7 +5,8 @@ import { useAuth } from '@/lib/AuthContext';
 import { getPollWithOptions, castVote, hasUserVoted } from '@/lib/polls';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import type { Poll } from '@/types/poll';
+import type { Poll } from '@/types';
+import PollResultChart from './PollResultChart';
 
 interface PollVotingProps {
   pollId: string;
@@ -231,8 +232,11 @@ export default function PollVoting({ pollId }: PollVotingProps) {
                   </p>
                 </div>
               )}
-
-              <div className="space-y-3">
+              
+              {/* Use the PollResults component to display poll results */}
+              <PollResultChart poll={poll} />
+              
+              <div className="space-y-3 mt-6">
                 {poll.options.map((option) => {
                   const percentage = totalVotes > 0 ? (option.voteCount / totalVotes) * 100 : 0;
                   const isWinning = option.voteCount === Math.max(...poll.options.map(opt => opt.voteCount)) && option.voteCount > 0;

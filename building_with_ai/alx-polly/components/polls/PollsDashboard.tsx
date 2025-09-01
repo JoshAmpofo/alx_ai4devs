@@ -7,7 +7,7 @@ import { getUserPolls, deletePoll } from "@/lib/polls";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import EditPollForm from "./EditPollForm";
-import type { Poll } from "@/types/poll";
+import type { Poll, EditablePoll } from "@/types";
 
 // Simple Badge component
 const Badge = ({ children, variant = "default" }: { 
@@ -258,13 +258,7 @@ export function PollsDashboard() {
                   {editingPoll === poll.id ? (
                     <CardContent className="pt-6">
                       <EditPollForm
-                        poll={{
-                          id: poll.id,
-                          question: poll.question,
-                          description: poll.description || null,
-                          expiresAt: poll.expiresAt,
-                          options: poll.options,
-                        }}
+                        poll={poll}
                         userId={user.id}
                         onSuccess={handleEditSuccess}
                         onCancel={() => setEditingPoll(null)}

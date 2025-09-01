@@ -1,6 +1,6 @@
 // Database helpers for polls
 import { supabase } from '@/lib/supabase/client';
-import type { Poll, PollOption, Vote } from '@/types/poll';
+import type { Poll, PollOption, Vote } from '@/types';
 
 export type DatabasePoll = {
   id: string;

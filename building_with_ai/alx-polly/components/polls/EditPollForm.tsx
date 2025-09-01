@@ -6,19 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { updatePollComplete } from '@/lib/polls';
+import type { Poll } from '@/types';
 
 interface EditPollFormProps {
-  poll: {
-    id: string;
-    question: string;
-    description: string | null;
-    expiresAt: string | null;
-    options: ReadonlyArray<{
-      id: string;
-      label: string;
-      voteCount: number;
-    }>;
-  };
+  poll: Poll;
   userId: string;
   onSuccess: () => void;
   onCancel: () => void;
