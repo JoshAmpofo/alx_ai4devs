@@ -50,7 +50,7 @@ describe('RegisterPage Component', () => {
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /sign up/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument();
     expect(screen.getByText(/already have an account/i)).toBeInTheDocument();
   });
 
@@ -61,7 +61,7 @@ describe('RegisterPage Component', () => {
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/^password$/i);
     const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-    const submitButton = screen.getByRole('button', { name: /sign up/i });
+    const submitButton = screen.getByRole('button', { name: /create account/i });
     
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
     fireEvent.change(passwordInput, { target: { value: 'password123' } });
@@ -80,7 +80,7 @@ describe('RegisterPage Component', () => {
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/^password$/i);
     const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-    const submitButton = screen.getByRole('button', { name: /sign up/i });
+    const submitButton = screen.getByRole('button', { name: /create account/i });
     
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
     fireEvent.change(passwordInput, { target: { value: '12345' } });
@@ -101,7 +101,7 @@ describe('RegisterPage Component', () => {
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/^password$/i);
     const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-    const submitButton = screen.getByRole('button', { name: /sign up/i });
+    const submitButton = screen.getByRole('button', { name: /create account/i });
     
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
     fireEvent.change(passwordInput, { target: { value: 'password123' } });
@@ -118,8 +118,9 @@ describe('RegisterPage Component', () => {
       });
     });
     
-    // Success message should be shown
-    expect(screen.getByText(/success/i)).toBeInTheDocument();
+        await waitFor(() => {
+      expect(screen.getByText(/Check Your Email!/i)).toBeInTheDocument();
+    });
     
     // Advance timers to trigger redirect
     jest.advanceTimersByTime(2000);
@@ -138,7 +139,7 @@ describe('RegisterPage Component', () => {
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/^password$/i);
     const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-    const submitButton = screen.getByRole('button', { name: /sign up/i });
+    const submitButton = screen.getByRole('button', { name: /create account/i });
     
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
     fireEvent.change(passwordInput, { target: { value: 'password123' } });
@@ -166,7 +167,7 @@ describe('RegisterPage Component', () => {
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/^password$/i);
     const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-    const submitButton = screen.getByRole('button', { name: /sign up/i });
+    const submitButton = screen.getByRole('button', { name: /create account/i });
     
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
     fireEvent.change(passwordInput, { target: { value: 'password123' } });

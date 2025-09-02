@@ -1,5 +1,5 @@
 // Import jest-dom for DOM element assertions
-import '@testing-library/jest-dom';
+require('@testing-library/jest-dom');
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
@@ -35,12 +35,10 @@ jest.mock('@/lib/supabase/client', () => ({
   },
 }));
 
+
+
 // Mock Chart.js to avoid canvas rendering issues
-jest.mock('chart.js', () => ({
-  Chart: jest.fn(),
-  registerables: [],
-  register: jest.fn(),
-}));
+
 
 // Mock react-chartjs-2
 jest.mock('react-chartjs-2', () => ({

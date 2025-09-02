@@ -1,20 +1,18 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import PollResultChart from '@/components/polls/PollResultChart';
 import { Chart } from 'chart.js';
 
-// Mock Chart.js
-jest.mock('chart.js', () => {
-  const mockChartInstance = {
-    destroy: jest.fn(),
-  };
-  
-  return {
-    Chart: jest.fn(() => mockChartInstance),
-    register: jest.fn(),
+const mockDestroy = jest.fn();
+jest.mock('chart.js', () => ({
+    Chart: Object.assign(
+        jest.fn().mockImplementation(() => ({
+            destroy: mockDestroy,
+        })),
+        { register: jest.fn() }
+    ),
     registerables: [],
-  };
-});
+}));
 
 const mockPoll = {
   id: 'poll-123',
@@ -32,10 +30,12 @@ const mockPoll = {
 
 describe('PollResultChart Component', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    // Mock canvas context
+    (Chart as jest.Mock).mockClear();
+    mockDestroy.mockClear();
+    (Chart.register as jest.Mock).mockClear();
+    
     HTMLCanvasElement.prototype.getContext = jest.fn(() => ({
-      // Add any canvas context methods that might be used
+      // Mock canvas context methods if needed
     })) as any;
   });
 
@@ -78,21 +78,14 @@ describe('PollResultChart Component', () => {
   it('destroys previous chart instance when unmounted', () => {
     const { unmount } = render(<PollResultChart poll={mockPoll} />);
     
-    // Get the mock chart instance
-    const mockChartInstance = (Chart as unknown as jest.Mock).mock.results[0].value;
-    
     unmount();
     
-    expect(mockChartInstance.destroy).toHaveBeenCalled();
+    expect(mockDestroy).toHaveBeenCalled();
   });
 
   it('recreates chart when poll data changes', () => {
     const { rerender } = render(<PollResultChart poll={mockPoll} />);
     
-    // Get the mock chart instance
-    const firstChartInstance = (Chart as unknown as jest.Mock).mock.results[0].value;
-    
-    // Update poll data
     const updatedPoll = {
       ...mockPoll,
       options: [
@@ -104,10 +97,7 @@ describe('PollResultChart Component', () => {
     
     rerender(<PollResultChart poll={updatedPoll} />);
     
-    // Should destroy the previous chart
-    expect(firstChartInstance.destroy).toHaveBeenCalled();
-    
-    // Should create a new chart with updated data
+    expect(mockDestroy).toHaveBeenCalled();
     expect(Chart).toHaveBeenCalledTimes(2);
     expect(Chart).toHaveBeenLastCalledWith(
       expect.anything(),
@@ -125,16 +115,10 @@ describe('PollResultChart Component', () => {
 
   it('recreates chart when chart type changes', () => {
     const { rerender } = render(<PollResultChart poll={mockPoll} chartType="doughnut" />);
-    
-    // Get the mock chart instance
-    const firstChartInstance = (Chart as unknown as jest.Mock).mock.results[0].value;
-    
+        
     rerender(<PollResultChart poll={mockPoll} chartType="pie" />);
     
-    // Should destroy the previous chart
-    expect(firstChartInstance.destroy).toHaveBeenCalled();
-    
-    // Should create a new chart with updated type
+    expect(mockDestroy).toHaveBeenCalled();
     expect(Chart).toHaveBeenCalledTimes(2);
     expect(Chart).toHaveBeenLastCalledWith(
       expect.anything(),
