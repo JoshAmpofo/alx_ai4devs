@@ -25,7 +25,11 @@ export type Vote = {
 };
 
 /**
- * Checks that the provided vote references an option that belongs to the given poll.
+ * Ensures that a vote references a valid option belonging to the specified poll.
+ * Needed to maintain data integrity between votes and poll options, preventing orphaned or invalid votes.
+ * Assumes vote and poll objects are correctly shaped and poll.options is an array of PollOption.
+ * Edge cases: poll/options mismatch, missing option, invalid IDs, empty options array.
+ * Used by backend validation and any logic that processes votes before saving.
  * Throws an Error if the relationship is invalid.
  */
 export function assertVoteRelationalIntegrity(

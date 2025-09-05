@@ -1,3 +1,10 @@
+/**
+ * PollVoting component manages the voting flow for a single poll, including authentication, option selection, vote submission, and result display.
+ * Needed to allow users to participate in polls, see live results, and handle edge cases like expired polls or duplicate votes.
+ * Assumes pollId is valid, user is authenticated, and poll data is available from backend.
+ * Edge cases: poll not found, expired poll, user already voted, network errors, invalid option selection.
+ * Connects to PollResultChart, PollResults, and authentication flows.
+ */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -12,6 +19,13 @@ interface PollVotingProps {
   pollId: string;
 }
 
+/**
+ * Handles poll voting UI and logic, including fetching poll data, checking vote status, submitting votes, and displaying results.
+ * Needed for interactive poll participation and feedback.
+ * Assumes pollId is valid and user context is available.
+ * Edge cases: missing poll, expired poll, user not logged in, network errors.
+ * Used by poll detail pages and dashboard.
+ */
 export default function PollVoting({ pollId }: PollVotingProps) {
   const { user, loading: authLoading } = useAuth();
   const [poll, setPoll] = useState<Poll | null>(null);
@@ -32,6 +46,13 @@ export default function PollVoting({ pollId }: PollVotingProps) {
     }
   }, [user, poll]);
 
+  /**
+   * Fetches poll data with options and vote counts from backend.
+   * Needed to display poll details and enable voting.
+   * Assumes pollId is valid.
+   * Edge cases: poll not found, network errors.
+   * Used on mount and after voting.
+   */
   const fetchPoll = async () => {
     try {
       setLoading(true);
@@ -48,6 +69,13 @@ export default function PollVoting({ pollId }: PollVotingProps) {
     }
   };
 
+  /**
+   * Checks if the current user has already voted on this poll.
+   * Needed to prevent duplicate votes and update UI accordingly.
+   * Assumes user and poll are available.
+   * Edge cases: backend errors, user not found.
+   * Used after poll/user load and after voting.
+   */
   const checkIfUserVoted = async () => {
     if (!user || !poll) return;
     
@@ -59,6 +87,13 @@ export default function PollVoting({ pollId }: PollVotingProps) {
     }
   };
 
+  /**
+   * Handles vote submission, including validation, backend call, and UI updates.
+   * Needed to record user votes and show feedback/results.
+   * Assumes user is authenticated and option is selected.
+   * Edge cases: no option selected, poll expired, user not logged in, network errors.
+   * Connects to backend and triggers poll refresh.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     

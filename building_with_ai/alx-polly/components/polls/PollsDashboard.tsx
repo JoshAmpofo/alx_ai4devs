@@ -9,7 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import EditPollForm from "./EditPollForm";
 import type { Poll, EditablePoll } from "@/types";
 
-// Simple Badge component
+/**
+ * Badge component displays a styled label for poll status (e.g., Active, New).
+ * Needed for visual feedback in dashboard poll cards.
+ * Assumes children is valid ReactNode and variant is one of allowed values.
+ * Edge cases: unknown variant, empty children.
+ * Used in PollsDashboard poll cards.
+ */
 const Badge = ({ children, variant = "default" }: { 
   children: React.ReactNode; 
   variant?: "default" | "secondary" 
@@ -23,6 +29,13 @@ const Badge = ({ children, variant = "default" }: {
   </span>
 );
 
+/**
+ * PollsDashboard component displays the user's polls, dashboard metrics, and provides management actions (edit, delete, view).
+ * Needed for user engagement, poll management, and analytics.
+ * Assumes user is authenticated and poll data is available from backend.
+ * Edge cases: no polls, network errors, edit/delete failures, empty dashboard.
+ * Connects to EditPollForm, PollList, and poll management logic.
+ */
 export function PollsDashboard() {
   const { user, loading } = useAuth();
   const [polls, setPolls] = useState<Poll[]>([]);
@@ -37,6 +50,13 @@ export function PollsDashboard() {
     }
   }, [user]);
 
+  /**
+   * Fetches all polls created by the current user from backend.
+   * Needed to populate dashboard and metrics.
+   * Assumes user is authenticated and user.id is valid.
+   * Edge cases: network errors, no polls found.
+   * Used on mount and after poll changes.
+   */
   const fetchUserPolls = async () => {
     if (!user) return;
     
@@ -52,6 +72,13 @@ export function PollsDashboard() {
     }
   };
 
+  /**
+   * Handles poll deletion, including confirmation, backend call, and UI refresh.
+   * Needed for poll management and cleanup.
+   * Assumes user is authenticated and pollId is valid.
+   * Edge cases: user cancels, backend errors, poll not found.
+   * Used in dashboard poll cards.
+   */
   const handleDelete = async (pollId: string) => {
     if (!user) return;
     
@@ -71,6 +98,13 @@ export function PollsDashboard() {
     }
   };
 
+  /**
+   * Handles successful poll edit, closes edit form and refreshes poll list.
+   * Needed to update dashboard after poll changes.
+   * Assumes edit was successful.
+   * Edge cases: refresh errors, edit form not closing.
+   * Used as callback for EditPollForm.
+   */
   const handleEditSuccess = async () => {
     setEditingPoll(null);
     await fetchUserPolls(); // Refresh the polls list

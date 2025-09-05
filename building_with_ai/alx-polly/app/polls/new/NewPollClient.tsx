@@ -10,6 +10,13 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
 import { createPoll } from "@/lib/polls";
 
+/**
+ * Generates a unique ID for poll options or other entities.
+ * Needed to ensure each option has a distinct identifier for React rendering and data integrity.
+ * Assumes browser environment with crypto support, falls back to timestamp/random if unavailable.
+ * Edge cases: crypto not available, collisions (rare).
+ * Used by NewPollClient for option management.
+ */
 function genId(): string {
   try {
     if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -23,6 +30,14 @@ function genId(): string {
 
 type PollOptionDraft = { readonly id: string; label: string };
 
+/**
+ * NewPollClient component provides the interactive UI and logic for creating a new poll.
+ * Handles form state, option management, validation, and submission to backend.
+ * Needed for user-driven poll creation, including authentication and error handling.
+ * Assumes user is authenticated, uses useAuth and router for navigation.
+ * Edge cases: invalid input, minimum/maximum options, expired date, network errors.
+ * Connects to createPoll, dashboard, and authentication flows.
+ */
 export function NewPollClient() {
   const router = useRouter();
   const { user, loading } = useAuth();
@@ -53,21 +68,50 @@ export function NewPollClient() {
     };
   }, []);
 
+  /**
+   * Adds a new empty option to the poll.
+   * Needed to allow users to expand poll choices, up to a maximum.
+   * Assumes not submitting and options is an array of PollOptionDraft.
+   * Edge cases: disables adding if submitting.
+   * Used within NewPollClient only.
+   */
   function addOption() {
     if (submitting) return;
     setOptions((prev) => [...prev, { id: genId(), label: "" }]);
   }
 
+  /**
+   * Updates the label of an option by ID.
+   * Needed for real-time editing of poll choices.
+   * Assumes not submitting and valid option ID.
+   * Edge cases: empty string, duplicate options.
+   * Used within NewPollClient only.
+   */
   function updateOption(id: string, label: string) {
     if (submitting) return;
     setOptions((prev) => prev.map((o) => (o.id === id ? { ...o, label } : o)));
   }
 
+  /**
+   * Removes an option by ID, enforcing a minimum of 2 options.
+   * Needed to let users delete unwanted choices but maintain poll validity.
+   * Assumes not submitting and valid option ID.
+   * Edge cases: disables removal if only 2 options remain.
+   * Used within NewPollClient only.
+   */
   function removeOption(id: string) {
     if (submitting) return;
     setOptions((prev) => (prev.length <= 2 ? prev : prev.filter((o) => o.id !== id)));
   }
 
+  /**
+   * Handles form submission to create a new poll in the backend.
+   * Validates input, manages UI state, and redirects on success.
+   * Needed to persist poll creation and provide feedback to the user.
+   * Assumes user is authenticated and all fields are controlled.
+   * Edge cases: missing title, too few options, invalid expiration, network errors.
+   * Connects to createPoll and dashboard.
+   */
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (submitting || !user) return;

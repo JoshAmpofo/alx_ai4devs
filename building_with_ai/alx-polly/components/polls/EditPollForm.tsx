@@ -15,6 +15,13 @@ interface EditPollFormProps {
   onCancel: () => void;
 }
 
+/**
+ * EditPollForm component allows users to update an existing poll's question, description, expiration, and options.
+ * Needed for poll management and user experience, enabling poll creators to modify their polls after creation.
+ * Assumes valid poll data is passed as props and user has permission to edit.
+ * Edge cases: poll not found, invalid input, update failure, minimum/maximum options.
+ * Connects to updatePollComplete in lib/polls and is used by dashboard and poll detail views.
+ */
 export default function EditPollForm({ poll, userId, onSuccess, onCancel }: EditPollFormProps) {
   const [question, setQuestion] = useState(poll.question);
   const [description, setDescription] = useState(poll.description || '');
@@ -25,24 +32,53 @@ export default function EditPollForm({ poll, userId, onSuccess, onCancel }: Edit
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * Adds a new empty option to the poll.
+   * Needed to allow users to expand poll choices, up to a maximum of 10.
+   * Assumes options is an array of strings.
+   * Edge cases: disables adding if already at max options.
+   * Used within EditPollForm only.
+   */
   const addOption = () => {
     if (options.length < 10) {
       setOptions([...options, '']);
     }
   };
 
+  /**
+   * Removes an option from the poll by index.
+   * Needed to let users delete unwanted choices, but enforces a minimum of 2 options.
+   * Assumes options is an array of strings and index is valid.
+   * Edge cases: disables removal if only 2 options remain.
+   * Used within EditPollForm only.
+   */
   const removeOption = (index: number) => {
     if (options.length > 2) {
       setOptions(options.filter((_, i) => i !== index));
     }
   };
 
+  /**
+   * Updates the label of an option at a given index.
+   * Needed for real-time editing of poll choices.
+   * Assumes index is valid and value is a string.
+   * Edge cases: empty string, duplicate options.
+   * Used within EditPollForm only.
+   */
   const updateOption = (index: number, value: string) => {
     const newOptions = [...options];
     newOptions[index] = value;
     setOptions(newOptions);
   };
 
+  /**
+   * Handles form submission to update the poll in the database.
+   * Validates input, calls updatePollComplete, and manages UI state.
+   * Needed to persist poll changes and provide feedback to the user.
+   * Assumes all fields are controlled and userId is valid.
+   * Edge cases: missing question, too few options, network errors, update failure.
+   * Connects to lib/polls and parent dashboard.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     

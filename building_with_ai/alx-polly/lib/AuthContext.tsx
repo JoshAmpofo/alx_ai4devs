@@ -1,3 +1,10 @@
+/**
+ * Provides global authentication context for the app.
+ * Needed to share auth state and actions across components.
+ * Assumes Supabase client and React context usage.
+ * Edge cases: context not provided, auth state desync, token expiry.
+ * Used by AuthForm, Navigation, and protected routes.
+ */
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
@@ -15,6 +22,12 @@ type SupabaseContext = {
 
 const Context = createContext<SupabaseContext | undefined>(undefined);
 
+  /**
+   * Wraps children with authentication context provider.
+   * Needed to enable global auth state and actions. Assumes children are React nodes.
+   * Edge cases: missing children, context misuse.
+   * Used at the app root.
+   */
 export default function AuthProvider({
   children,
 }: {

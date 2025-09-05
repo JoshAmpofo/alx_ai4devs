@@ -1,3 +1,10 @@
+/**
+ * PollResults component displays the results of a poll, including total votes, chart visualization, and detailed breakdown.
+ * Needed to provide users with feedback and insights after voting or when viewing poll outcomes.
+ * Assumes a valid Poll object is passed as a prop, with options and vote counts.
+ * Edge cases: zero votes, multiple options with same max votes, chart type switching.
+ * Connects to PollResultChart for visualization and is used by PollVoting and dashboard views.
+ */
 'use client';
 
 import { useState } from 'react';
@@ -10,6 +17,14 @@ interface PollResultsProps {
   poll: Poll;
 }
 
+/**
+ * Renders poll results, chart selector, and detailed results breakdown.
+ * Handles chart type switching and highlights leading option(s).
+ * Needed for user engagement and transparency.
+ * Assumes poll.options is an array of PollOption with voteCount.
+ * Edge cases: no votes, ties, invalid poll data.
+ * Used by PollVoting and dashboard.
+ */
 export default function PollResults({ poll }: PollResultsProps) {
   const [chartType, setChartType] = useState<'bar' | 'pie' | 'doughnut'>('doughnut');
   const totalVotes = poll.options.reduce((sum, opt) => sum + opt.voteCount, 0);

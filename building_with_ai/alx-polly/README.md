@@ -1,6 +1,120 @@
+
 # alx-polly
 
-Create, share, and run live polls with QR codes. alx-polly is a Next.js + Supabase app for instructors, event hosts, and teams to collect votes from any device and view real‑time results with simple, secure management.
+**alx-polly** is a modern polling application built with Next.js and Supabase. It enables users to create, share, and run live polls, collect votes from any device, and view real-time results. Designed for instructors, event hosts, and teams, it features secure authentication, QR code sharing, and a responsive UI.
+
+## Tech Stack
+
+- **Next.js 15** (App Router)
+- **TypeScript**
+- **Supabase** (Auth & Database)
+- **React**
+- **Tailwind CSS**
+- **Jest** (Testing)
+
+---
+
+## Setup & Configuration
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/JoshAmpofo/alx_ai4devs.git
+cd alx_ai4devs/building_with_ai/alx-polly
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+# or
+bun install
+```
+
+### 3. Configure Supabase & Environment Variables
+
+Create a project in [Supabase](https://supabase.com/) and copy your project URL and anon key.
+
+Create a `.env.local` file in the root directory:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL="your-supabase-url"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
+```
+
+Supabase clients are configured in `lib/supabase/client.ts` and `lib/supabase/server.ts`.
+
+---
+
+## Usage Examples
+
+### Creating a Poll
+
+1. Log in or register for an account.
+2. Click "Create New Poll" on the dashboard.
+3. Enter your poll question, description, options, and (optionally) expiration date.
+4. Submit to create the poll. Share the poll link or QR code with participants.
+
+### Voting on a Poll
+
+1. Open a poll link or scan the QR code.
+2. Select your preferred option and submit your vote.
+3. View live results and charts after voting.
+
+---
+
+## Running & Testing Locally
+
+### Start the development server
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Visit [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Run tests
+
+```bash
+npm test
+# or
+yarn test
+# or
+pnpm test
+```
+
+---
+
+## Project Overview
+
+- **Feature overview**: Create polls with multiple choices, share via QR code, and view real‑time results. See the app entry at `app/page.tsx` and auth at `app/(auth)/` for flows.
+- **Folder structure**:
+  - [`app/`](./app) — Next.js App Router pages, layouts, and routes
+  - [`components/`](./components) — UI and composite components (e.g., `components/ui/*`)
+  - [`lib/`](./lib) — clients and utilities (e.g., Supabase in `lib/supabase/*`)
+  - [`types/`](./types) — shared TypeScript types (e.g., `types/poll.ts`)
+  - [`public/`](./public) — static assets (icons, images)
+- **Development and build scripts**: See [`package.json`](./package.json)
+  - `dev`: start local dev server
+  - `build`: production build
+  - `start`: run built app
+- **Environment and setup**:
+  - Create a `.env.local` with your Supabase credentials:
+    - `NEXT_PUBLIC_SUPABASE_URL="..."`
+    - `NEXT_PUBLIC_SUPABASE_ANON_KEY="..."`
+  - Supabase clients live in `lib/supabase/client.ts` and `lib/supabase/server.ts`.
+
+---
 
 ## Recent Updates & Improvements
 
@@ -55,6 +169,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
 
 ## Project Docs
 

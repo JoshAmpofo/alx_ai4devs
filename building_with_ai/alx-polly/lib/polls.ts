@@ -35,7 +35,20 @@ export type CreatePollData = {
 /**
  * Create a new poll with options
  */
-export async function createPoll(data: CreatePollData, userId: string) {
+/**
+ * Provides poll-related data operations for the app.
+ * Needed to abstract poll CRUD logic and connect UI components to Supabase.
+ * Assumes Supabase client is configured and poll schema matches usage.
+ * Edge cases: missing poll, query errors, permission issues.
+ * Used by PollsDashboard, EditPollForm, NewPollForm, PollVoting, etc.
+ */
+  export async function createPoll(data: CreatePollData, userId: string) {
+    /**
+     * Creates a new poll in Supabase.
+     * Needed for poll creation workflow. Assumes valid pollData structure.
+     * Edge cases: validation errors, network issues, permission denied.
+     * Used by NewPollForm and NewPollClient.
+     */
   const { question, description, expiresAt, options } = data;
   
   if (options.length < 2) {
@@ -76,7 +89,13 @@ export async function createPoll(data: CreatePollData, userId: string) {
 /**
  * Get a poll with its options and vote counts
  */
-export async function getPollWithOptions(pollId: string): Promise<Poll | null> {
+  export async function getPollWithOptions(pollId: string): Promise<Poll | null> {
+    /**
+     * Fetches a poll with its options and vote counts.
+     * Needed for poll detail views. Assumes valid poll ID.
+     * Edge cases: poll not found, query errors.
+     * Used by PollDetail and PollVoting.
+     */
   // Get poll details
   const { data: pollData, error: pollError } = await supabase
     .from('polls')
@@ -127,7 +146,13 @@ export async function getPollWithOptions(pollId: string): Promise<Poll | null> {
 /**
  * Get polls created by a user
  */
-export async function getUserPolls(userId: string): Promise<Poll[]> {
+  export async function getUserPolls(userId: string): Promise<Poll[]> {
+    /**
+     * Gets polls created by a user.
+     * Needed for user dashboards and management. Assumes valid user ID.
+     * Edge cases: no polls found, query errors.
+     * Used by UserPollsDashboard.
+     */
   const { data, error } = await supabase
     .from('polls')
     .select(`
@@ -191,7 +216,13 @@ export async function getUserPolls(userId: string): Promise<Poll[]> {
 /**
  * Cast a vote on a poll
  */
-export async function castVote(pollId: string, optionId: string, voterId?: string) {
+  export async function castVote(pollId: string, optionId: string, voterId?: string) {
+    /**
+     * Casts a vote on a poll.
+     * Needed for user interaction with polls. Assumes valid poll and option IDs.
+     * Edge cases: poll not found, option not found, permission issues.
+     * Used by PollVoting.
+     */
   const { error } = await supabase
     .from('votes')
     .insert({
@@ -206,7 +237,13 @@ export async function castVote(pollId: string, optionId: string, voterId?: strin
 /**
  * Check if user has already voted on a poll
  */
-export async function hasUserVoted(pollId: string, voterId: string): Promise<boolean> {
+  export async function hasUserVoted(pollId: string, voterId: string): Promise<boolean> {
+    /**
+     * Checks if a user has already voted on a poll.
+     * Needed to prevent multiple votes. Assumes valid poll ID and voter ID.
+     * Edge cases: poll not found, query errors.
+     * Used by PollVoting.
+     */
   const { data, error } = await supabase
     .from('votes')
     .select('id')
@@ -222,7 +259,13 @@ export async function hasUserVoted(pollId: string, voterId: string): Promise<boo
 /**
  * Delete a poll (and all its options and votes via cascade)
  */
-export async function deletePoll(pollId: string, userId: string): Promise<void> {
+  export async function deletePoll(pollId: string, userId: string): Promise<void> {
+    /**
+     * Deletes a poll and all its options and votes via cascade.
+     * Needed for poll management. Assumes valid poll ID and user ownership.
+     * Edge cases: poll not found, permission issues.
+     * Used by PollManagement.
+     */
   // First verify the user owns this poll
   const { data: pollData, error: pollError } = await supabase
     .from('polls')
@@ -248,11 +291,17 @@ export async function deletePoll(pollId: string, userId: string): Promise<void> 
 /**
  * Update a poll's question and description
  */
-export async function updatePoll(
-  pollId: string, 
-  userId: string, 
-  data: { question: string; description?: string | null; expiresAt?: string | null }
-): Promise<void> {
+  export async function updatePoll(
+    pollId: string, 
+    userId: string, 
+    data: { question: string; description?: string | null; expiresAt?: string | null }
+  ): Promise<void> {
+    /**
+     * Updates a poll's question and description.
+     * Needed for poll editing workflow. Assumes valid poll ID and data.
+     * Edge cases: update failure, invalid ID, permission issues.
+     * Used by EditPollForm.
+     */
   // First verify the user owns this poll
   const { data: pollData, error: pollError } = await supabase
     .from('polls')
@@ -282,11 +331,17 @@ export async function updatePoll(
 /**
  * Update poll options - replaces all existing options with new ones
  */
-export async function updatePollOptions(
-  pollId: string,
-  userId: string,
-  options: string[]
-): Promise<void> {
+  export async function updatePollOptions(
+    pollId: string,
+    userId: string,
+    options: string[]
+  ): Promise<void> {
+    /**
+     * Updates poll options - replaces all existing options with new ones.
+     * Needed for poll management. Assumes valid poll ID and user ownership.
+     * Edge cases: validation errors, permission issues.
+     * Used by EditPollForm.
+     */
   // First verify the user owns this poll
   const { data: pollData, error: pollError } = await supabase
     .from('polls')
@@ -335,16 +390,22 @@ export async function updatePollOptions(
 /**
  * Update both poll details and options in a single operation
  */
-export async function updatePollComplete(
-  pollId: string,
-  userId: string,
-  data: {
-    question: string;
-    description?: string | null;
-    expiresAt?: string | null;
-    options: string[];
-  }
-): Promise<void> {
+  export async function updatePollComplete(
+    pollId: string,
+    userId: string,
+    data: {
+      question: string;
+      description?: string | null;
+      expiresAt?: string | null;
+      options: string[];
+    }
+  ): Promise<void> {
+    /**
+     * Updates both poll details and options in a single operation.
+     * Needed for efficient poll management. Assumes valid poll ID and user ownership.
+     * Edge cases: update failure, permission issues.
+     * Used by EditPollForm.
+     */
   // Update poll details
   await updatePoll(pollId, userId, {
     question: data.question,
