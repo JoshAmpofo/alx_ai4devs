@@ -28,7 +28,7 @@ const Context = createContext<SupabaseContext | undefined>(undefined);
    * Edge cases: missing children, context misuse.
    * Used at the app root.
    */
-export default function AuthProvider({
+export function AuthProvider({
   children,
 }: {
   children: React.ReactNode;

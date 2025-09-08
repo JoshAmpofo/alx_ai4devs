@@ -4,13 +4,14 @@ import PollResults from '@/components/polls/PollResults';
 import type { Metadata } from 'next';
 
 interface PollResultsPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function generateMetadata({ params }: PollResultsPageProps): Promise<Metadata> {
-  const poll = await getPollWithOptions(params.id);
+  const resolvedParams = await params;
+  const poll = await getPollWithOptions(resolvedParams.id);
   
   if (!poll) {
     return {
@@ -25,7 +26,8 @@ export async function generateMetadata({ params }: PollResultsPageProps): Promis
 }
 
 export default async function PollResultsPage({ params }: PollResultsPageProps) {
-  const poll = await getPollWithOptions(params.id);
+  const resolvedParams = await params;
+  const poll = await getPollWithOptions(resolvedParams.id);
   
   if (!poll) {
     notFound();

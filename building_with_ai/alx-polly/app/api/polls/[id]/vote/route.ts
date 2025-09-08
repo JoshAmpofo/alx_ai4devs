@@ -12,13 +12,14 @@ import { castVote, hasUserVoted } from '@/lib/polls';
  */
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const params = await context.params;
   const pollId = params.id;
   const { optionId } = await request.json();
 
@@ -40,7 +41,7 @@ export async function POST(
  */
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createSupabaseServerClient();
   const {
@@ -51,6 +52,7 @@ export async function GET(
     return new NextResponse('Unauthorized', { status: 401 });
   }
 
+  const params = await context.params;
   const pollId = params.id;
 
   try {

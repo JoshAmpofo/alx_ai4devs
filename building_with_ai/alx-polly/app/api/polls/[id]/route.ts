@@ -12,8 +12,9 @@ import { getPollWithOptions, updatePollComplete, deletePoll } from '@/lib/polls'
  */
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params;
   const pollId = params.id;
   try {
     const poll = await getPollWithOptions(pollId);
@@ -35,7 +36,7 @@ export async function GET(
  */
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createSupabaseServerClient();
   const {
@@ -46,6 +47,7 @@ export async function PUT(
     return new NextResponse('Unauthorized', { status: 401 });
   }
 
+  const params = await context.params;
   const pollId = params.id;
   const pollData = await request.json();
 
@@ -66,7 +68,7 @@ export async function PUT(
  */
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createSupabaseServerClient();
   const {
@@ -77,6 +79,7 @@ export async function DELETE(
     return new NextResponse('Unauthorized', { status: 401 });
   }
 
+  const params = await context.params;
   const pollId = params.id;
 
   try {
