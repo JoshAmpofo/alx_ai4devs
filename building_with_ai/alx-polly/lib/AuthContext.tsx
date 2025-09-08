@@ -11,11 +11,9 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { useRouter } from "next/navigation";
 
-import type { SupabaseClient, User } from "@supabase/supabase-js";
-
 type SupabaseContext = {
-  supabase: SupabaseClient;
-  user: User | null;
+  supabase: any;
+  user: any | null;
   loading: boolean;
   signOut: () => Promise<void>;
 };
@@ -33,13 +31,17 @@ export function AuthProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [supabase] = useState(() =>
-    createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-  );
-  const [user, setUser] = useState<User | null>(null);
+  const [supabase] = useState(() => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    if (!url || !key) {
+      throw new Error('Supabase environment variables are required');
+    }
+    
+    return createBrowserClient(url, key);
+  });
+  const [user, setUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -51,7 +53,7 @@ export function AuthProvider({
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: any) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
@@ -59,7 +61,7 @@ export function AuthProvider({
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
       setUser(session?.user ?? null);
       setLoading(false);
       

@@ -49,6 +49,8 @@ export type CreatePollData = {
      * Edge cases: validation errors, network issues, permission denied.
      * Used by NewPollForm and NewPollClient.
      */
+  if (!supabase) throw new Error('Supabase client not available');
+  
   const { question, description, expiresAt, options } = data;
   
   if (options.length < 2) {
@@ -96,6 +98,8 @@ export type CreatePollData = {
      * Edge cases: poll not found, query errors.
      * Used by PollDetail and PollVoting.
      */
+  if (!supabase) throw new Error('Supabase client not available');
+  
   // Get poll details
   const { data: pollData, error: pollError } = await supabase
     .from('polls')
@@ -123,8 +127,18 @@ export type CreatePollData = {
   if (basicOptionsError) throw basicOptionsError;
 
   // Combine option data with vote counts
-  const options: PollOption[] = basicOptionsData?.map((opt) => {
-    const voteData = optionsData?.find(v => v.option_id === opt.id);
+  interface BasicOptionData {
+    id: string;
+    label: string;
+  }
+
+  interface VoteCountData {
+    option_id: string;
+    vote_count: number;
+  }
+
+  const options: PollOption[] = basicOptionsData?.map((opt: BasicOptionData) => {
+    const voteData: VoteCountData | undefined = optionsData?.find((v: VoteCountData) => v.option_id === opt.id);
     return {
       id: opt.id,
       label: opt.label,
@@ -153,6 +167,8 @@ export type CreatePollData = {
      * Edge cases: no polls found, query errors.
      * Used by UserPollsDashboard.
      */
+  if (!supabase) throw new Error('Supabase client not available');
+  
   const { data, error } = await supabase
     .from('polls')
     .select(`
@@ -189,8 +205,13 @@ export type CreatePollData = {
     if (voteCountsError) throw voteCountsError;
 
     // Create a map for quick vote count lookup
-    const voteCountMap = new Map(
-      voteCountsData?.map(vc => [vc.option_id, vc.vote_count]) || []
+    interface VoteCountData {
+      option_id: string;
+      vote_count: number;
+    }
+
+    const voteCountMap = new Map<string, number>(
+      voteCountsData?.map((vc: VoteCountData) => [vc.option_id, vc.vote_count]) || []
     );
 
     const options: PollOption[] = optionsData?.map((opt: any) => ({
@@ -223,6 +244,8 @@ export type CreatePollData = {
      * Edge cases: poll not found, option not found, permission issues.
      * Used by PollVoting.
      */
+  if (!supabase) throw new Error('Supabase client not available');
+  
   const { error } = await supabase
     .from('votes')
     .insert({
@@ -244,6 +267,8 @@ export type CreatePollData = {
      * Edge cases: poll not found, query errors.
      * Used by PollVoting.
      */
+  if (!supabase) throw new Error('Supabase client not available');
+  
   const { data, error } = await supabase
     .from('votes')
     .select('id')
@@ -266,6 +291,8 @@ export type CreatePollData = {
      * Edge cases: poll not found, permission issues.
      * Used by PollManagement.
      */
+  if (!supabase) throw new Error('Supabase client not available');
+  
   // First verify the user owns this poll
   const { data: pollData, error: pollError } = await supabase
     .from('polls')
@@ -302,6 +329,8 @@ export type CreatePollData = {
      * Edge cases: update failure, invalid ID, permission issues.
      * Used by EditPollForm.
      */
+  if (!supabase) throw new Error('Supabase client not available');
+  
   // First verify the user owns this poll
   const { data: pollData, error: pollError } = await supabase
     .from('polls')
@@ -342,6 +371,8 @@ export type CreatePollData = {
      * Edge cases: validation errors, permission issues.
      * Used by EditPollForm.
      */
+  if (!supabase) throw new Error('Supabase client not available');
+  
   // First verify the user owns this poll
   const { data: pollData, error: pollError } = await supabase
     .from('polls')
@@ -406,6 +437,8 @@ export type CreatePollData = {
      * Edge cases: update failure, permission issues.
      * Used by EditPollForm.
      */
+  if (!supabase) throw new Error('Supabase client not available');
+  
   // Update poll details
   await updatePoll(pollId, userId, {
     question: data.question,
