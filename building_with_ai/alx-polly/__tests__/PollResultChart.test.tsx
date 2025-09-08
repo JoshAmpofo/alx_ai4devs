@@ -30,9 +30,9 @@ const mockPoll = {
 
 describe('PollResultChart Component', () => {
   beforeEach(() => {
-    (Chart as jest.Mock).mockClear();
+    (Chart as unknown as jest.Mock).mockClear();
     mockDestroy.mockClear();
-    (Chart.register as jest.Mock).mockClear();
+    (Chart.register as unknown as jest.Mock).mockClear();
     
     HTMLCanvasElement.prototype.getContext = jest.fn(() => ({
       // Mock canvas context methods if needed
