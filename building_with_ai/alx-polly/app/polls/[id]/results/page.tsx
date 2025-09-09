@@ -5,13 +5,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 interface PollResultsPageProps {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export async function generateMetadata({ params }: PollResultsPageProps): Promise<Metadata> {
-  const poll = await getPollWithOptions(params.id);
+  const { id } = await params;
+  const poll = await getPollWithOptions(id);
   
   if (!poll) {
     return {
@@ -26,7 +26,8 @@ export async function generateMetadata({ params }: PollResultsPageProps): Promis
 }
 
 export default async function PollResultsPage({ params }: PollResultsPageProps) {
-  const poll = await getPollWithOptions(params.id);
+  const { id } = await params;
+  const poll = await getPollWithOptions(id);
   
   if (!poll) {
     notFound();

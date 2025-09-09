@@ -4,11 +4,13 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
 interface PollDetailPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export async function generateMetadata({ params }: PollDetailPageProps) {
-  const poll = await getPollWithOptions(params.id);
+  const { id } = await params;
+  const poll = await getPollWithOptions(id);
 
   return {
     title: poll ? `${poll.question} - Alx Polly` : 'Poll - Alx Polly',
@@ -20,7 +22,8 @@ export async function generateMetadata({ params }: PollDetailPageProps) {
 
 export default async function PollDetailPage({ params }: PollDetailPageProps) {
   // Fetching poll data once to ensure it exists before rendering
-  const poll = await getPollWithOptions(params.id);
+  const { id } = await params;
+  const poll = await getPollWithOptions(id);
 
   if (!poll) {
     notFound();
@@ -34,7 +37,7 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
             ← Back to Polls
           </Link>
           <Link
-            href={`/polls/${params.id}/results`}
+            href={`/polls/${id}/results`}
             className="hover:text-blue-600 underline"
           >
             View Detailed Results →
@@ -42,7 +45,7 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
         </nav>
       </div>
 
-      <PollVoting pollId={params.id} />
+      <PollVoting pollId={id} />
     </main>
   );
 }
