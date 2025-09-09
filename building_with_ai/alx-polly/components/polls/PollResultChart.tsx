@@ -9,7 +9,7 @@ Chart.register(...registerables);
 
 interface PollResultChartProps {
   poll: Poll;
-  chartType?: 'bar' | 'pie' | 'doughnut';
+  chartType?: 'bar' | 'pie' | 'doughnut' | 'line';
 }
 
 export default function PollResultChart({ poll, chartType = 'doughnut' }: PollResultChartProps) {

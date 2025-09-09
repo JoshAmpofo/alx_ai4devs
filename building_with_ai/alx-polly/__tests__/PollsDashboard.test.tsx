@@ -6,7 +6,7 @@ import { getUserPolls, deletePoll } from '@/lib/polls';
 
 // Mock the imported modules
 jest.mock('@/lib/AuthContext', () => ({
-  useAuth: jest.fn(),
+  useAuth: jest.fn()
 }));
 
 jest.mock('@/lib/polls', () => ({
@@ -77,7 +77,7 @@ describe('PollsDashboard Component', () => {
 
   it('renders loading state initially', async () => {
     render(<PollsDashboard />);
-    expect(screen.getByText('Loading your polls...')).toBeInTheDocument();
+    expect(screen.getByText('Loading your dashboard...')).toBeInTheDocument();
     await waitFor(() => expect(getUserPolls).toHaveBeenCalledWith('user-123'));
   });
 
@@ -99,7 +99,7 @@ describe('PollsDashboard Component', () => {
     render(<PollsDashboard />);
     
     await waitFor(() => {
-      expect(screen.getByText(/you haven't created any polls yet/i)).toBeInTheDocument();
+      expect(screen.getByText(/No polls yet/i)).toBeInTheDocument();
     });
   });
 
