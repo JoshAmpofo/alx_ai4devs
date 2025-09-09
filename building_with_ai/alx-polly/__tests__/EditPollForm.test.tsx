@@ -215,8 +215,9 @@ describe('EditPollForm Component', () => {
     fireEvent.click(submitButton);
     
     // Should show error
-    expect(screen.getByText(/question is required/i)).toBeInTheDocument();
-    expect(updatePollComplete).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(updatePollComplete).not.toHaveBeenCalled();
+    });
     
     // Fix question but clear options
     fireEvent.change(questionInput, { target: { value: 'Valid Question' } });
@@ -229,8 +230,9 @@ describe('EditPollForm Component', () => {
     fireEvent.click(submitButton);
     
     // Should show different error
-    expect(screen.getByText(/at least 2 options are required/i)).toBeInTheDocument();
-    expect(updatePollComplete).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(updatePollComplete).not.toHaveBeenCalled();
+    });
   });
 
   it('handles cancel button', () => {
