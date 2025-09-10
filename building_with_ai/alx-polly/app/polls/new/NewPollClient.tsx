@@ -9,11 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
 import { createPoll } from "@/lib/polls";
+import { generatePollSuggestions, type SuggestionResponse } from "@/lib/actions/poll-suggestions";
 
-type Suggestions = {
-  questionSuggestions: string[];
-  optionSuggestions: string[][];
-};
+type Suggestions = SuggestionResponse;
 
 /**
  * Generates a unique ID for poll options or other entities.
@@ -75,7 +73,7 @@ export function NewPollClient() {
     };
   }, []);
 
-  async function getSuggestions() {
+  async function fetchSuggestions() {
     if (!title.trim()) {
       setError('Please enter a question first.');
       return;
@@ -86,20 +84,11 @@ export function NewPollClient() {
     setSuggestions(null);
 
     try {
-      const response = await fetch('/api/polls/suggestions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          question: title, 
-          options: options.map(o => o.label).filter(l => l.trim())
-        }),
+      const data = await generatePollSuggestions({
+        question: title,
+        options: options.map(o => o.label).filter(l => l.trim())
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch suggestions.');
-      }
-
-      const data = await response.json();
+      
       setSuggestions(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
@@ -113,8 +102,35 @@ export function NewPollClient() {
     setSuggestions(null);
   }
 
-  function applyOptionsSuggestion(newOptions: string[]) {
-    setOptions(newOptions.map(label => ({ id: genId(), label })))
+    function applyOptionsSuggestion(suggestedOptions: string[], shouldAppend?: boolean) {
+    // Default behavior: append options (true) if no explicit choice is made
+    const useAppend = shouldAppend !== undefined ? shouldAppend : true;
+    
+    if (useAppend) {
+      // Append mode: merge with existing options and deduplicate
+      setOptions(prevOptions => {
+        // Get existing option labels (case-insensitive for comparison)
+        const existingLabels = new Set(
+          prevOptions
+            .map(opt => opt.label.trim().toLowerCase())
+            .filter(label => label.length > 0)
+        );
+        
+        // Filter new options to avoid duplicates
+        const uniqueNewOptions = suggestedOptions
+          .filter((newLabel: string) => {
+            const normalizedLabel = newLabel.trim().toLowerCase();
+            return normalizedLabel.length > 0 && !existingLabels.has(normalizedLabel);
+          })
+          .map((label: string) => ({ id: genId(), label: label.trim() }));
+        
+        return [...prevOptions, ...uniqueNewOptions];
+      });
+    } else {
+      // Replace mode: replace all options with suggestions
+      setOptions(suggestedOptions.map((label: string) => ({ id: genId(), label: label.trim() })));
+    }
+    
     setSuggestions(null);
   }
 
@@ -324,15 +340,36 @@ export function NewPollClient() {
                   <label className="text-sm font-semibold text-gray-700" htmlFor="title">
                     Poll Question *
                   </label>
-                  <Button 
-                    type="button" 
-                    size="sm" 
-                    onClick={getSuggestions}
-                    disabled={isFetchingSuggestions || !title.trim()}
-                    className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-                  >
-                    {isFetchingSuggestions ? 'Getting suggestions...' : 'Get Suggestions'}
-                  </Button>
+                  <div className="relative">
+                    <Button 
+                      type="button" 
+                      size="sm" 
+                      onClick={fetchSuggestions}
+                      disabled={isFetchingSuggestions || !title.trim()}
+                      aria-busy={isFetchingSuggestions}
+                      aria-disabled={isFetchingSuggestions || !title.trim()}
+                      aria-label={
+                        isFetchingSuggestions 
+                          ? "Getting AI suggestions for your poll question" 
+                          : !title.trim() 
+                            ? "Get AI suggestions (enter a question first)" 
+                            : "Get AI suggestions to improve your poll question"
+                      }
+                      className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                    >
+                      {isFetchingSuggestions ? 'Getting suggestions...' : 'Get Suggestions'}
+                    </Button>
+                    {/* Visually hidden status for screen readers */}
+                    {isFetchingSuggestions && (
+                      <span 
+                        role="status" 
+                        aria-live="polite" 
+                        className="sr-only"
+                      >
+                        Getting AI suggestions for your poll question, please wait...
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <Input
                   id="title"
@@ -349,28 +386,76 @@ export function NewPollClient() {
 
               {/* Suggestions Display */}
               {suggestions && (
-                <div className="space-y-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h3 className="font-semibold text-gray-800">Suggestions</h3>
+                <div 
+                  className="space-y-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"
+                  role="region"
+                  aria-labelledby="suggestions-heading"
+                  aria-live="polite"
+                >
+                  <h3 id="suggestions-heading" className="font-semibold text-gray-800">
+                    AI Suggestions for Your Poll
+                  </h3>
                   {suggestions.questionSuggestions.length > 0 && (
                     <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-gray-700">Question:</h4>
-                      {suggestions.questionSuggestions.map((q, i) => (
-                        <div key={i} className="flex items-center justify-between p-2 bg-white rounded-md">
-                          <p className="text-sm text-gray-600">{q}</p>
-                          <Button type="button" size="sm" onClick={() => applyQuestionSuggestion(q)}>Use this</Button>
-                        </div>
-                      ))}
+                      <h4 className="text-sm font-medium text-gray-700">Question Alternatives:</h4>
+                      <div role="list" aria-label="Question suggestions">
+                        {suggestions.questionSuggestions.map((q: string, i: number) => (
+                          <div 
+                            key={i} 
+                            className="flex items-center justify-between p-2 bg-white rounded-md"
+                            role="listitem"
+                          >
+                            <p className="text-sm text-gray-600">{q}</p>
+                            <Button 
+                              type="button" 
+                              size="sm" 
+                              onClick={() => applyQuestionSuggestion(q)}
+                              aria-label={`Use suggestion: ${q}`}
+                            >
+                              Use this
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                   {suggestions.optionSuggestions.length > 0 && (
                     <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-gray-700">Options:</h4>
-                      {suggestions.optionSuggestions.map((opts, i) => (
-                        <div key={i} className="flex items-center justify-between p-2 bg-white rounded-md">
-                          <p className="text-sm text-gray-600">{opts.join(', ')}</p>
-                          <Button type="button" size="sm" onClick={() => applyOptionsSuggestion(opts)}>Use these</Button>
-                        </div>
-                      ))}
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-medium text-gray-700">Option Alternatives:</h4>
+                      </div>
+                      <div role="list" aria-label="Option suggestions">
+                        {suggestions.optionSuggestions.map((opts: string[], i: number) => (
+                          <div 
+                            key={i} 
+                            className="flex items-center justify-between p-2 bg-white rounded-md"
+                            role="listitem"
+                          >
+                            <p className="text-sm text-gray-600">{opts.join(', ')}</p>
+                            <div className="flex space-x-1">
+                              <Button 
+                                type="button" 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => applyOptionsSuggestion(opts, true)}
+                                aria-label={`Append these options: ${opts.join(', ')}`}
+                                className="text-xs"
+                              >
+                                Add
+                              </Button>
+                              <Button 
+                                type="button" 
+                                size="sm" 
+                                onClick={() => applyOptionsSuggestion(opts, false)}
+                                aria-label={`Replace all options with: ${opts.join(', ')}`}
+                                className="text-xs"
+                              >
+                                Replace
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

@@ -14,8 +14,11 @@
     "test": "jest",
     "test:watch": "jest --watch"
   },
+
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "qrcode.react": "^4.2.0",
+    "@supabase/ssr": "^0.7.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.56.0",
     "chart.js": "^4.5.0",

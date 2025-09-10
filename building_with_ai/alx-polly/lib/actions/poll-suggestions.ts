@@ -1,28 +1,33 @@
-// app/api/polls/suggestions/route.ts
-// DEPRECATED: This API route is deprecated in favor of the Server Action at lib/actions/poll-suggestions.ts
-// Consider removing this file after ensuring all clients have migrated to the Server Action
-import { NextResponse } from 'next/server';
+'use server';
+
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-export async function POST(request: Request) {
+export interface SuggestionRequest {
+  question: string;
+  options: string[];
+}
+
+export interface SuggestionResponse {
+  questionSuggestions: string[];
+  optionSuggestions: string[][];
+}
+
+export async function generatePollSuggestions(data: SuggestionRequest): Promise<SuggestionResponse> {
   try {
     // Check if API key is available at runtime
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       console.error('GEMINI_API_KEY is not set in environment variables');
-      return new NextResponse('AI service is not configured', { status: 401 });
+      throw new Error('AI service is not configured');
     }
 
     // Initialize the AI client with the validated API key
     const genAI = new GoogleGenerativeAI(apiKey);
 
-    // Parse request body
-    const body = await request.json();
-    const question = body.question;
-    const options = body.options;
+    const { question, options } = data;
 
-    if (!question || !options) {
-      return new NextResponse('Question and options are required', { status: 400 });
+    if (!question || !options || options.length === 0) {
+      throw new Error('Question and options are required');
     }
 
     // Try different models in order of preference for free tier
@@ -57,7 +62,7 @@ export async function POST(request: Request) {
     
     if (!model) {
       console.error('No available models found');
-      return new NextResponse('AI service temporarily unavailable', { status: 503 });
+      throw new Error('AI service temporarily unavailable');
     }
     
     console.log(`Using model: ${modelName}`);
@@ -114,8 +119,8 @@ Each option set must contain exactly ${options.length} options.
 
     console.log('Generating AI suggestions for question:', question);
     
-    // Add timeout to the API call
-    const timeoutPromise = new Promise((_, reject) => {
+    // Add timeout to the AI call
+    const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error('Request timeout after 30 seconds')), 30000);
     });
     
@@ -125,14 +130,14 @@ Each option set must contain exactly ${options.length} options.
       return await response.text();
     };
     
-    const text = await Promise.race([aiPromise(), timeoutPromise]) as string;
+    const text = await Promise.race([aiPromise(), timeoutPromise]);
     
     console.log('AI response received:', text.substring(0, 100) + '...');
     
     // Clean the response to ensure it's valid JSON
     const cleanedText = text.replace(/```json/g, '').replace(/```/g, '').trim();
     
-    let jsonResponse;
+    let jsonResponse: SuggestionResponse;
     try {
       jsonResponse = JSON.parse(cleanedText);
     } catch (parseError) {
@@ -151,8 +156,38 @@ Each option set must contain exactly ${options.length} options.
         throw new Error('No JSON found in AI response');
       }
     }
+
+    // Validate the response structure
+    if (!jsonResponse.questionSuggestions || !jsonResponse.optionSuggestions) {
+      throw new Error('Invalid response format from AI service');
+    }
     
-    return NextResponse.json(jsonResponse);
+    // Validate that we have the expected number of suggestions
+    if (!Array.isArray(jsonResponse.questionSuggestions) || jsonResponse.questionSuggestions.length !== 3) {
+      console.warn('Expected 3 question suggestions, got:', jsonResponse.questionSuggestions?.length);
+    }
+    
+    if (!Array.isArray(jsonResponse.optionSuggestions) || jsonResponse.optionSuggestions.length !== 2) {
+      console.warn('Expected 2 option sets, got:', jsonResponse.optionSuggestions?.length);
+    }
+    
+    // Validate that each option set has the correct number of options
+    jsonResponse.optionSuggestions.forEach((optionSet, index) => {
+      if (!Array.isArray(optionSet) || optionSet.length !== options.length) {
+        console.warn(`Option set ${index + 1} has ${optionSet?.length} options, expected ${options.length}`);
+      }
+    });
+    
+    // Ensure we have at least some valid suggestions
+    if (jsonResponse.questionSuggestions.length === 0) {
+      throw new Error('No question suggestions received from AI service');
+    }
+    
+    if (jsonResponse.optionSuggestions.length === 0) {
+      throw new Error('No option suggestions received from AI service');
+    }
+    
+    return jsonResponse;
     
   } catch (error) {
     console.error('Error generating suggestions:', error);
@@ -165,53 +200,41 @@ Each option set must contain exactly ${options.length} options.
       // Check for specific API quota/billing errors
       if (error.message.includes('quota') || error.message.includes('billing') || error.message.includes('exceeded')) {
         console.error('API quota/billing issue detected');
-        return new NextResponse('AI service quota exceeded. Please try again later.', { status: 429 });
+        throw new Error('AI service quota exceeded. Please try again later.');
       }
       
       // Check for network/fetch errors
       if (error.message.includes('fetch failed') || error.message.includes('network')) {
         console.error('Network connectivity issue detected');
-        return new NextResponse('Network error connecting to AI service. Please try again.', { status: 503 });
+        throw new Error('Network error connecting to AI service. Please try again.');
       }
       
       // Check for timeout errors
       if (error.message.includes('timeout')) {
         console.error('Request timeout detected');
-        return new NextResponse('AI service request timed out. Please try again.', { status: 504 });
+        throw new Error('AI service request timed out. Please try again.');
       }
     }
     
-    // Extract question and options for fallback (safely)
-    let fallbackQuestion = '';
-    let fallbackOptions: string[] = [];
-    
-    try {
-      const body = await request.json();
-      fallbackQuestion = body.question || '';
-      fallbackOptions = body.options || [];
-    } catch {
-      // If we can't parse the request, use empty defaults
-    }
-    
     // Return a high-quality fallback response that follows our criteria
-    const fallbackResponse = {
+    const fallbackResponse: SuggestionResponse = {
       questionSuggestions: [
         // More neutral and clear versions of the original question
-        fallbackQuestion ? `What is your preference regarding ${fallbackQuestion.toLowerCase().replace(/\?$/, '')}?` : 'What is your preference on this topic?',
-        fallbackQuestion ? `How would you respond to: ${fallbackQuestion.replace(/\?$/, '')}?` : 'How would you respond to this question?',
-        fallbackQuestion ? `Which option best represents your view on ${fallbackQuestion.toLowerCase().replace(/\?$/, '')}?` : 'Which option best represents your view?'
+        data.question ? `What is your preference regarding ${data.question.toLowerCase().replace(/\?$/, '')}?` : 'What is your preference on this topic?',
+        data.question ? `How would you respond to: ${data.question.replace(/\?$/, '')}?` : 'How would you respond to this question?',
+        data.question ? `Which option best represents your view on ${data.question.toLowerCase().replace(/\?$/, '')}?` : 'Which option best represents your view?'
       ],
       optionSuggestions: [
         // Keep original options but ensure they match the expected count
-        fallbackOptions.length > 0 ? fallbackOptions : ['Option 1', 'Option 2'],
+        data.options.length > 0 ? data.options : ['Option 1', 'Option 2'],
         // Create a cleaner alternative set
-        fallbackOptions.length > 0 
-          ? fallbackOptions.map((opt: string, index: number) => `Choice ${String.fromCharCode(65 + index)}: ${opt}`)
+        data.options.length > 0 
+          ? data.options.map((opt: string, index: number) => `Choice ${String.fromCharCode(65 + index)}: ${opt}`)
           : ['Choice A', 'Choice B']
       ]
     };
     
     console.log('Returning fallback response due to AI service error');
-    return NextResponse.json(fallbackResponse);
+    return fallbackResponse;
   }
 }
