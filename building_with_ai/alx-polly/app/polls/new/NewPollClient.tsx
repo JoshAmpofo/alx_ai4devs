@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
 import { createPoll } from "@/lib/polls";
+
+type Suggestions = {
+  questionSuggestions: string[];
+  optionSuggestions: string[][];
+};
 
 /**
  * Generates a unique ID for poll options or other entities.
@@ -53,6 +58,8 @@ export function NewPollClient() {
   const [success, setSuccess] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [suggestions, setSuggestions] = useState<Suggestions | null>(null);
+  const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
@@ -67,6 +74,50 @@ export function NewPollClient() {
       window.removeEventListener('mousemove', handleMouseMove);
     };
   }, []);
+
+  async function getSuggestions() {
+    if (!title.trim()) {
+      setError('Please enter a question first.');
+      return;
+    }
+
+    setIsFetchingSuggestions(true);
+    setError(null);
+    setSuggestions(null);
+
+    try {
+      const response = await fetch('/api/polls/suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          question: title, 
+          options: options.map(o => o.label).filter(l => l.trim())
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch suggestions.');
+      }
+
+      const data = await response.json();
+      setSuggestions(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+    } finally {
+      setIsFetchingSuggestions(false);
+    }
+  }
+
+  function applyQuestionSuggestion(suggestion: string) {
+    setTitle(suggestion);
+    setSuggestions(null);
+  }
+
+  function applyOptionsSuggestion(newOptions: string[]) {
+    setOptions(newOptions.map(label => ({ id: genId(), label })))
+    setSuggestions(null);
+  }
+
 
   /**
    * Adds a new empty option to the poll.
@@ -269,9 +320,20 @@ export function NewPollClient() {
             <form className="space-y-8" onSubmit={onSubmit}>
               {/* Poll Title */}
               <div className="space-y-3">
-                <label className="text-sm font-semibold text-gray-700" htmlFor="title">
-                  Poll Question *
-                </label>
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-semibold text-gray-700" htmlFor="title">
+                    Poll Question *
+                  </label>
+                  <Button 
+                    type="button" 
+                    size="sm" 
+                    onClick={getSuggestions}
+                    disabled={isFetchingSuggestions || !title.trim()}
+                    className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                  >
+                    {isFetchingSuggestions ? 'Getting suggestions...' : 'Get Suggestions'}
+                  </Button>
+                </div>
                 <Input
                   id="title"
                   placeholder="What would you like to ask?"
@@ -284,6 +346,35 @@ export function NewPollClient() {
                 />
                 <p className="text-xs text-gray-500">{title.length}/120 characters</p>
               </div>
+
+              {/* Suggestions Display */}
+              {suggestions && (
+                <div className="space-y-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h3 className="font-semibold text-gray-800">Suggestions</h3>
+                  {suggestions.questionSuggestions.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-gray-700">Question:</h4>
+                      {suggestions.questionSuggestions.map((q, i) => (
+                        <div key={i} className="flex items-center justify-between p-2 bg-white rounded-md">
+                          <p className="text-sm text-gray-600">{q}</p>
+                          <Button type="button" size="sm" onClick={() => applyQuestionSuggestion(q)}>Use this</Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {suggestions.optionSuggestions.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-gray-700">Options:</h4>
+                      {suggestions.optionSuggestions.map((opts, i) => (
+                        <div key={i} className="flex items-center justify-between p-2 bg-white rounded-md">
+                          <p className="text-sm text-gray-600">{opts.join(', ')}</p>
+                          <Button type="button" size="sm" onClick={() => applyOptionsSuggestion(opts)}>Use these</Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Description */}
               <div className="space-y-3">
